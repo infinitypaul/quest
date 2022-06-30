@@ -1,7 +1,11 @@
 <?php
 namespace App\Checkers;
 
+use App\Checkers\Errors\Errors;
+use App\Checkers\Rules\EmailRule;
+use App\Checkers\Rules\Required;
 use App\Checkers\Rules\Rule;
+use JetBrains\PhpStorm\Pure;
 
 class Check
 {
@@ -15,9 +19,20 @@ class Check
      */
     protected array $rules = [];
 
-    public function __construct(array $data){
+
+    protected Errors $errors;
+
+
+    protected $ruleMap = [
+        'required' => Required::class,
+        'email' => EmailRule::class
+    ];
+
+
+    #[Pure] public function __construct(array $data){
 
         $this->data = $data;
+        $this->errors = new Errors();
     }
 
     /**
@@ -28,17 +43,39 @@ class Check
         $this->rules = $rules;
     }
 
-    public function validate(){
+    public function validate(): bool
+    {
         foreach ($this->rules as $field => $rules){
-            foreach ($rules as $rule){
+            foreach ($this->resolveRules($rules) as $rule){
                 $this->validateRule($field, $rule);
             }
         }
+
+        return $this->errors->hasErrors();
     }
+
+
+    protected function resolveRules(array $rules): array
+    {
+        return array_map(function ($rule){
+            if(is_string($rule)){
+                return $this->getRuleFromString($rule);
+            }
+           return $rule;
+        }, $rules);
+    }
+
+
+    protected function getRuleFromString($rule){
+        return new $this->ruleMap[$rule]();
+    }
+
+
+
 
     public function validateRule($field, Rule $rule){
        if(!$rule->passes($field, $this->getFieldValue($field, $this->data))){
-           dump($rule->message($field));
+           $this->errors->add($field, $rule->message($field));
        }
     }
 
@@ -47,7 +84,14 @@ class Check
      * @param $data
      * @return string|null
      */
-    public function getFieldValue($field, $data){
+    public function getFieldValue($field, $data): ?string
+    {
         return $data[$field] ?? null;
+    }
+
+
+    #[Pure] public function getErrors(): array
+    {
+        return $this->errors->getErrors();
     }
 }

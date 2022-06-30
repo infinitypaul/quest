@@ -3,18 +3,26 @@
 require_once 'vendor/autoload.php';
 
 $check = new \App\Checkers\Check([
-    'name' => 'Paul'
+    'name' => '',
+    'email' => 'i'
 ]);
 
 $check->setRules([
     'name' => [
-        new \App\Checkers\Rules\Required()
+        'required'
+    ],
+    'email' => [
+        new \App\Checkers\Rules\Required(),
+        'email'
     ]
 ]);
 
 
-$check->validate();
+if(!$check->validate()){
+    dump($check->getErrors());
+} else {
+    dump("passed");
+};
 
 
 
-//dump($check);
