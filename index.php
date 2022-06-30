@@ -4,20 +4,27 @@ require_once 'vendor/autoload.php';
 
 $check = new \App\Checkers\Check([
     'name' => '',
-    'email' => 'i',
-    'password' => '3'
+    'email' => [
+        'infinitypaul@live.com',
+        '',
+        'ade',
+        'ade@google.com'
+    ],
+    'password' => 'eeee'
 ]);
 
 $check->setRules([
     'name' => [
         'required'
     ],
-    'email' => [
+    'email.*' => [
         new \App\Checkers\Rules\Required(),
-        'email'
+        'email',
+        'blacklist'
     ],
     'password' => [
-        'min:4'
+        'min:5',
+        'sequence'
     ]
 ]);
 

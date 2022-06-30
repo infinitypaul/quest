@@ -2,10 +2,6 @@
 namespace App\Checkers;
 
 use App\Checkers\Errors\Errors;
-use App\Checkers\Rules\EmailRule;
-use App\Checkers\Rules\MinRule;
-use App\Checkers\Rules\PasswordRule;
-use App\Checkers\Rules\Required;
 use App\Checkers\Rules\Rule;
 use JetBrains\PhpStorm\Pure;
 
@@ -25,18 +21,27 @@ class Check
     protected Errors $errors;
 
 
-    protected array $ruleMap = [
-        'required' => Required::class,
-        'email' => EmailRule::class,
-        'min' => MinRule::class,
-        'password' => PasswordRule::class
-    ];
+
 
 
     #[Pure] public function __construct(array $data){
 
-        $this->data = $data;
+        $this->data = $this->extractWildCartData($data);
         $this->errors = new Errors();
+    }
+
+
+    protected function extractWildCartData($data, $root='', $results=[]): mixed
+    {
+        foreach ($data as $key => $value){
+            if (is_array($value)){
+                $results = array_merge($results, $this->extractWildCartData($value, $root.$key.'.'));
+            } else {
+                $results[$root.$key] = $value;
+            }
+        }
+
+        return $results;
     }
 
     /**
@@ -47,6 +52,9 @@ class Check
         $this->rules = $rules;
     }
 
+    /**
+     * @return bool
+     */
     public function validate(): bool
     {
         foreach ($this->rules as $field => $rules){
@@ -59,6 +67,10 @@ class Check
     }
 
 
+    /**
+     * @param array $rules
+     * @return array
+     */
     protected function resolveRules(array $rules): array
     {
         return array_map(function ($rule){
@@ -70,21 +82,54 @@ class Check
     }
 
 
+    /**
+     * @param $rule
+     * @return mixed
+     */
     protected function getRuleFromString($rule){
-        $exploded = explode(':', $rule);
-        $rule = $exploded[0];
-        $options = explode('.', end($exploded));
-        return new $this->ruleMap[$rule](...$options);
+        return $this->newRuleFromMap(
+            ($exploded = explode(':', $rule))[0],
+            explode('.', end($exploded))
+        );
+
+
+    }
+
+    protected function newRuleFromMap($rule, $options){
+        return RuleMap::resolve($rule, $options);
     }
 
 
-
-
+    /**
+     * @param $field
+     * @param Rule $rule
+     * @return void
+     */
     public function validateRule($field, Rule $rule){
-       if(!$rule->passes($field, $this->getFieldValue($field, $this->data))){
-           $this->errors->add($field, $rule->message($field));
-       }
+        foreach ($this->getMatchingData($field) as $matchedField){
+            $this->validateUsingRuleObject($matchedField, $this->getFieldValue($matchedField, $this->data), $rule );
+        }
+
     }
+
+    /**
+     * @param $field
+     * @param $value
+     * @param Rule $rule
+     * @return void
+     */
+    protected function validateUsingRuleObject($field, $value, Rule $rule){
+        if(!$rule->passes($field, $value)){
+            $this->errors->add($field, $rule->message($field));
+        }
+    }
+
+
+    protected function getMatchingData($field): bool|array
+    {
+        return preg_grep('/^' . str_replace('*', '([^\.]+)', $field) . '/', array_keys($this->data));
+    }
+
 
     /**
      * @param $field
