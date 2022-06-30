@@ -24,7 +24,11 @@ composer install
 php -S localhost:8000
 ```
 
-5. Sample Code 
+5. Sample Response
+
+![img.png](img.png)
+
+7. Sample Code 
 
 ```php
 $check = new \App\Checkers\Check([
