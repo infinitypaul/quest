@@ -7,7 +7,9 @@ $check = new \App\Checkers\Check([
 ]);
 
 $check->setRules([
-    'testing'
+    'name' => [
+        new \App\Checkers\Rules\Required()
+    ]
 ]);
 
 
