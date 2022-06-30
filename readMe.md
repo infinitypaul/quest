@@ -122,9 +122,7 @@ What is needed is to create a new rule, extend the RULE class, and define all yo
 * Password Combination
 * Password Checks to be sure it isn't part of the leaked password
 
-### Database choice
 
-DOCUMENT BASED, since the essence of a document based is to are to store dissimilar entities in a flexible way
 
 
 
