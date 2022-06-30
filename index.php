@@ -13,6 +13,8 @@ $check->setRules([
 ]);
 
 
+$check->validate();
 
 
-dump($check);
+
+//dump($check);
