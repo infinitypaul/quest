@@ -4,7 +4,8 @@ require_once 'vendor/autoload.php';
 
 $check = new \App\Checkers\Check([
     'name' => '',
-    'email' => 'i'
+    'email' => 'i',
+    'password' => '3'
 ]);
 
 $check->setRules([
@@ -14,6 +15,9 @@ $check->setRules([
     'email' => [
         new \App\Checkers\Rules\Required(),
         'email'
+    ],
+    'password' => [
+        'min:4'
     ]
 ]);
 

@@ -3,6 +3,8 @@ namespace App\Checkers;
 
 use App\Checkers\Errors\Errors;
 use App\Checkers\Rules\EmailRule;
+use App\Checkers\Rules\MinRule;
+use App\Checkers\Rules\PasswordRule;
 use App\Checkers\Rules\Required;
 use App\Checkers\Rules\Rule;
 use JetBrains\PhpStorm\Pure;
@@ -23,9 +25,11 @@ class Check
     protected Errors $errors;
 
 
-    protected $ruleMap = [
+    protected array $ruleMap = [
         'required' => Required::class,
-        'email' => EmailRule::class
+        'email' => EmailRule::class,
+        'min' => MinRule::class,
+        'password' => PasswordRule::class
     ];
 
 
@@ -67,7 +71,10 @@ class Check
 
 
     protected function getRuleFromString($rule){
-        return new $this->ruleMap[$rule]();
+        $exploded = explode(':', $rule);
+        $rule = $exploded[0];
+        $options = explode('.', end($exploded));
+        return new $this->ruleMap[$rule](...$options);
     }
 
 
